@@ -7,3 +7,6 @@ pydantic
 python-multipart
 python-dotenv
 pytest
+PyPDF2
+sentence-transformers
+anthropic
