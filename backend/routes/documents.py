@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from services import extract_text_from_pdf, chunk_text, get_embeddings
 from models import Document, Chunk
-from schemas import UploadResponse
+from schemas import UploadResponse, DocumentResponse
 
 router = APIRouter()
 def get_db():
@@ -60,3 +60,34 @@ async def create_upload_file(
             status_code=500,
             detail=f"Error processing file: {str(e)}"
         )
+
+@router.get("/", response_model=list[DocumentResponse])
+async def list_documents(db: Session = Depends(get_db)):
+    documents = db.query(Document).all()
+    return [DocumentResponse(
+        id=doc.id,
+        filename=doc.name,
+        size=doc.size,
+        created_at=doc.created_at
+    ) for doc in documents]
+
+@router.get("/{document_id}", response_model=DocumentResponse)
+async def get_document(document_id: int, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    return DocumentResponse(
+        id=doc.id,
+        filename=doc.name,
+        size=doc.size,
+        created_at=doc.created_at
+    )
+
+@router.delete("/{document_id}")
+async def delete_document(document_id: int, db: Session = Depends(get_db)):
+    doc = db.query(Document).filter(Document.id == document_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+    db.delete(doc)
+    db.commit()
+    return {"message": "Document deleted successfully"}

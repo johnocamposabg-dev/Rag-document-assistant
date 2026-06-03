@@ -9,5 +9,5 @@ class Document(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     size: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    chats: Mapped[list["Chat"]] = relationship("Chat", back_populates="document")
-    chunks: Mapped[list["Chunk"]] = relationship("Chunk", back_populates="document")
+    chunks = relationship("Chunk", back_populates="document", cascade="all, delete-orphan")
+    chats = relationship("Chat", back_populates="document", cascade="all, delete-orphan")
