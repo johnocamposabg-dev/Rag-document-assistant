@@ -66,7 +66,7 @@ function ChatPage() {
                         )
                         }
                     </div>
-                    <div className="border-t border-gray-200 p-4 flex gap-2">
+                    <div className="border-t border-gray-200 p-4 flex flex-col md:flex-row gap-2">
                         <input
                             type="text"
                             value={question}

@@ -19,7 +19,7 @@ export function uploadDocument(file: File){
 }
 
 export function deleteDocument(id: number){
-    return api.delete(`/documents/${id}/`)
+    return api.delete(`/documents/${id}`)
 }
 
 export function queryChat(question: string, document_id: number){
