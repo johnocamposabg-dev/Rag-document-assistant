@@ -7,6 +7,7 @@ pydantic
 python-multipart
 python-dotenv
 pytest
-PyPDF2
+pypdf
 sentence-transformers
 anthropic
+httpx

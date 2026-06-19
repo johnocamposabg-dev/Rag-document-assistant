@@ -1,11 +1,15 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import DocumentsPage from './pages/DocumentsPage'
+import ChatPage from './pages/ChatPage'
 function App() {
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-blue-500">
-        Doc Assistant
-      </h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/documents" element={<DocumentsPage />} />
+        <Route path="/documents/:id" element={<ChatPage />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
-export default App
+export default App 
