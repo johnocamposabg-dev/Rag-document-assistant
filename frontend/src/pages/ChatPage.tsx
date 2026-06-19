@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useState } from 'react'
 import { queryChat } from '../services/api'
 import ReactMarkdown from 'react-markdown'
@@ -14,7 +14,6 @@ function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([])
     const [question, setQuestion] = useState('')
     const [loading, setLoading] = useState(false)
-    const navigate = useNavigate()
     const { id } = useParams<{ id: string }>()
 
     const handleSubmit = async () => {
