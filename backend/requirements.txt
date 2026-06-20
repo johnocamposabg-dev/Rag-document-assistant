@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 fastapi
 uvicorn
 sqlalchemy
@@ -8,6 +9,7 @@ python-multipart
 python-dotenv
 pytest
 pypdf
+torch
 sentence-transformers
 anthropic
 httpx
