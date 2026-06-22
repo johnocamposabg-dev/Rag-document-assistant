@@ -27,23 +27,31 @@ async def create_upload_file(
                 status_code=400,
                 detail="The PDF contains no readable text.")
         chunks = chunk_text(text, chunk_size=500, overlap=100)
-        embeddings = get_embeddings(chunks)
+
         doc = Document(
-        name=file.filename,
-        size=file.size
+            name=file.filename,
+            size=file.size
         )
         db.add(doc)
-        db.flush()  
-        for i, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            chunk_db = Chunk(
-                document_id=doc.id,
-                text=chunk,
-                embedding=embedding,
-                chunk_index=i
-            )
-            db.add(chunk_db)
+        db.flush()
 
-        db.commit()
+        batch_size = 100
+        chunk_index = 0
+
+        for i in range(0, len(chunks), batch_size):
+            batch = chunks[i:i + batch_size]
+            batch_embeddings = get_embeddings(batch)
+            for chunk, embedding in zip(batch, batch_embeddings):
+                chunk_db = Chunk(
+                    document_id=doc.id,
+                    text=chunk,
+                    embedding=embedding,
+                    chunk_index=chunk_index
+                )
+                db.add(chunk_db)
+                chunk_index += 1
+            db.commit()
+
         db.refresh(doc)
 
         return UploadResponse(
