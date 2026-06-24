@@ -14,7 +14,7 @@ def get_db():
         db.close()
 
 @router.post("/query/", response_model=ChatResponse)
-async def chat(request: ChatRequest, db: Session = Depends(get_db)):
+def chat(request: ChatRequest, db: Session = Depends(get_db)):
     document = db.query(Document).filter(Document.id == request.document_id).first()
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -25,4 +25,4 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="No chunks found for this document")
     results = db.query(Chunk).filter(Chunk.document_id == request.document_id).order_by(Chunk.embedding.cosine_distance(query_vector)).limit(5).all()
     context = "\n\n".join([c.text for c in results])
-    return ChatResponse(answer=get_answer(request.question, context), sources=[c.id for c in results])
+    return ChatResponse(answer=get_answer(request.question, context), sources=[{"id": c.id, "text": c.text} for c in results])

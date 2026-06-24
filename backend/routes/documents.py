@@ -4,6 +4,9 @@ from database import SessionLocal
 from services import extract_text_from_pdf, chunk_text, get_embeddings
 from models import Document, Chunk
 from schemas import UploadResponse, DocumentResponse
+from pypdf import PdfReader
+
+MAX_PAGES=50
 
 router = APIRouter()
 def get_db():
@@ -12,16 +15,22 @@ def get_db():
         yield db
     finally:
         db.close()
+
 @router.post("/upload/")
-async def create_upload_file(
+def create_upload_file(
     file: UploadFile,
     db: Session = Depends(get_db)):
     if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=400,
             detail="Only PDF files are allowed.")
+    reader = PdfReader(file.file)
+    if len(reader.pages) > MAX_PAGES:
+        raise HTTPException(
+            status_code=400,
+            detail= f"The PDF has more than {MAX_PAGES} pages")
     try:
-        text = extract_text_from_pdf(file.file)
+        text = extract_text_from_pdf(reader)
         if not text.strip():
             raise HTTPException(
                 status_code=400,
@@ -61,7 +70,8 @@ async def create_upload_file(
                 chunks_count=len(chunks),
                 message="File processed successfully"
         )
-
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -70,7 +80,7 @@ async def create_upload_file(
         )
 
 @router.get("/", response_model=list[DocumentResponse])
-async def list_documents(db: Session = Depends(get_db)):
+def list_documents(db: Session = Depends(get_db)):
     documents = db.query(Document).all()
     return [DocumentResponse(
         id=doc.id,
@@ -80,7 +90,7 @@ async def list_documents(db: Session = Depends(get_db)):
     ) for doc in documents]
 
 @router.get("/{document_id}", response_model=DocumentResponse)
-async def get_document(document_id: int, db: Session = Depends(get_db)):
+def get_document(document_id: int, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
@@ -92,7 +102,7 @@ async def get_document(document_id: int, db: Session = Depends(get_db)):
     )
 
 @router.delete("/{document_id}")
-async def delete_document(document_id: int, db: Session = Depends(get_db)):
+def delete_document(document_id: int, db: Session = Depends(get_db)):
     doc = db.query(Document).filter(Document.id == document_id).first()
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")

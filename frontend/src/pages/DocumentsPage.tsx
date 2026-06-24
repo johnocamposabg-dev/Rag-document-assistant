@@ -1,10 +1,11 @@
-import { useState, useEffect} from 'react'
+import { useState, useEffect } from 'react'
 import { getDocuments, uploadDocument, deleteDocument } from '../services/api'
 import { useNavigate, Link } from 'react-router-dom'
 import duck from '../assets/duck.png'
 import type { Document } from '../types'
 import DocumentCard from '../components/DocumentsCard'
 import Footer from '../components/Down'
+import axios from 'axios'
 
 
 function DocumentsPage() {
@@ -12,13 +13,22 @@ function DocumentsPage() {
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
     const [isDragging, setIsDragging] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+
     const fetchDocuments = async () => {
+        setError(null)
         setLoading(true)
         try {
             const response = await getDocuments()
             setDocuments(response.data)
         } catch (error) {
             console.error('Error fetching documents:', error)
+            if (axios.isAxiosError(error)) {
+                setError(error.response?.data?.detail || 'Something went wrong. Please try again.')
+            } else {
+                setError('Something went wrong. Please try again.')
+            }
         } finally {
             setLoading(false)
         }
@@ -29,12 +39,18 @@ function DocumentsPage() {
     }, [])
 
     const handleUpload = async (file: File) => {
+        setError(null)
         setLoading(true)
         try {
             await uploadDocument(file)
             await fetchDocuments()
         } catch (error) {
             console.error('Error uploading document:', error)
+            if (axios.isAxiosError(error)) {
+                setError(error.response?.data?.detail || 'Something went wrong. Please try again.')
+            } else {
+                setError('Something went wrong. Please try again.')
+            }
         } finally {
             setLoading(false)
         }
@@ -61,12 +77,18 @@ function DocumentsPage() {
 
     const handleDelete = async (id: number) => {
         if (!window.confirm('Are you sure you want to delete this document?')) return
+        setError(null)
         setLoading(true)
         try {
             await deleteDocument(id)
             await fetchDocuments()
         } catch (error) {
             console.error('Error deleting document:', error)
+            if (axios.isAxiosError(error)) {
+                setError(error.response?.data?.detail || 'Something went wrong. Please try again.')
+            } else {
+                setError('Something went wrong. Please try again.')
+            }
         } finally {
             setLoading(false)
         }
@@ -89,6 +111,7 @@ function DocumentsPage() {
                     <span className="text-5xl font-title italic text-violetText">What are we reading today?</span>
                 </h1>
                 <p className="text-lg my-4 text-gray-500">Upload a PDF or open a recent one, and chat with it: ask questions, request summaries, and jump to the exact page of each answer.</p>
+                <p className="text-sm text-gray-400 mt-1">Up to 50 pages · Demo app — please don't upload documents with personal or sensitive information.</p>
 
                 <label
                     onDragOver={handleDragOver}
@@ -112,6 +135,11 @@ function DocumentsPage() {
                     </p>
                     <p className="text-sm text-gray-400 mt-1">Up to 50 MB · only processed for your conversation</p>
                 </label>
+                {error && (
+                    <div className="text-red-600 text-sm text-center my-2">
+                        {error}
+                    </div>
+                )}
 
                 <h2 className="text-2xl font-title mb-4">Recent Documents</h2>
 
